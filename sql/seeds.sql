@@ -1,4 +1,4 @@
-INSERT INTO amazon_db.items(product_name, department_name, price, stock_quantity)
+INSERT INTO items(product, department , price, inStock)
 VALUES ("2.4 Ghz Yagi Antenna", "Network Adapters", 35.89, 100),
 ("TP-Link Archer T2U Nano Adapter", "Network Adapters", 17.99, 500),
 ("ASUS PCE-AC51 AC750 Wireless Dual Band Adapter", "Network Adapters", 29.99, 750),

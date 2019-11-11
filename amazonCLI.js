@@ -6,7 +6,7 @@ var connection = mysql.createConnection({
     port: 3306,
     database: "amazon_db",
     user: "root",
-    password: "<%alucard81%>"
+    password: ""
 });
 
 connection.connect(function (err) {
@@ -14,14 +14,63 @@ connection.connect(function (err) {
     displayAll();
 });
 
-function displayAll() {
-    connection.query("SELECT item_id, product, price FROM items", function (err, res) {
-        if (err) throw err;
-        var newline = ("\n\n========================================\n")
-        for (var i = 0; i < res.length; i++) {
-            console.log(` ID: ${res[i].item_id} \n Product: ${res[i].product_name} \n Price: $${res[i].price} ${newline}`)
-        };
 
+
+var displayAll = function() {
+    connection.query("SELECT * FROM items", function (err, res) {
+        if (err) throw err;
+        var newline = ("\n========================================")
+        for (var i = 0; i < res.length; i++) {
+            console.log("ID: " + res[i].item_id + " || Item: " + res[i].product + " || Price: $" + res[i].price + " || Current stock: " + res[i].inStock);
+        };
+        buyEverything();
     });
 }
 
+var buyEverything = function() {
+    inquirer
+        .prompt({
+            name: "item",
+            type: "number",
+            message: "What would you like to look buy? (Enter ID or ctrl + C to quit)"
+        })
+        .then(function (answer) {
+            connection.query("SELECT * FROM items WHERE item_id = ?", [answer.item],
+                function (err, res) {
+                    if (err) throw err;
+                        var product = res[0].product;
+                        var product_available = res[0].inStock;
+                        var price = res[0].price;
+                        
+                        if (res[0].item_id === answer.item) {
+
+                            inquirer.prompt({
+                                name: "quantity",
+                                type: "number",
+                                message: "How many would you like?",
+                                validate: function(value){
+                                    if((value) >= 1){
+                                        return true;
+                                    } else {
+                                        return false;
+                                    }
+                                }
+                            }).then(function(answer){
+
+                                var determineQuantity = (product_available - answer.quantity);
+                                if ( determineQuantity > 0 ){
+                                    connection.query("UPDATE items SET inStock = ? WHERE product = ?", [determineQuantity, product], function(err, res) {
+                                        if (err) throw err;
+                                        var newline = ("\n========================================")
+                                        console.log(`Your total is $${answer.quantity * price} ${newline} \n Purchase complete! Thanks! ${newline}`);
+                                        displayAll();
+                                    });
+                                } else {
+                                    console.log("Not a valid choice!");
+                                    buyEverything();
+                                }
+                            })
+                        };
+                    })
+    })
+}
